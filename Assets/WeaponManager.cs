@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ClassSystem : MonoBehaviour
+public class WeaponManager : MonoBehaviour
 {
     [Header("In-Game Sectors")]
     public GameObject[] slots;
@@ -16,6 +16,10 @@ public class ClassSystem : MonoBehaviour
     [Tooltip("Weapon that is in use will be sent here.")]
     public GameObject Holder;
 
+    [Header("Hand Attach Points")]
+    public Transform leftHandTransform;  // Assign the left hand of the arm model here
+    public Transform rightHandTransform; // Assign the right hand of the arm model here
+
     public bool m_slot1;
     public bool m_slot2;
     public bool m_slot3;
@@ -27,6 +31,7 @@ public class ClassSystem : MonoBehaviour
     {
         Scroll();
         Slot();
+        AdjustHandsToGrip();
     }
 
     void Scroll()
@@ -77,9 +82,12 @@ public class ClassSystem : MonoBehaviour
                 slot.transform.SetParent(Holder.transform, true); // Move selected slot to Holder
                 slot.SetActive(true); // Activate the selected slot
 
-                // Update hand grip points when the weapon is changed
-                leftHandTarget = slot.transform.Find("LeftHandGrip");
-                rightHandTarget = slot.transform.Find("RightHandGrip");
+                // Get the active weapon (child of the slot)
+                GameObject activeWeapon = slot.transform.GetChild(0).gameObject; 
+
+                // Update hand grip points from the active weapon
+                leftHandTarget = activeWeapon.transform.Find("LeftHandGrip");
+                rightHandTarget = activeWeapon.transform.Find("RightHandGrip");
             }
             else
             {
@@ -88,6 +96,7 @@ public class ClassSystem : MonoBehaviour
             }
         }
     }
+
 
     void ManageWeapon(int slotIndex, int weaponIndex)
     {
@@ -103,5 +112,15 @@ public class ClassSystem : MonoBehaviour
         GameObject newWeapon = Instantiate(weaponList[weaponIndex], slots[slotIndex].transform.position, slots[slotIndex].transform.rotation);
         newWeapon.transform.localScale = new Vector3(newWeapon.transform.localScale.x / 4f, newWeapon.transform.localScale.y / 4f, newWeapon.transform.localScale.z / 4f);
         newWeapon.transform.SetParent(slots[slotIndex].transform);
+    }
+
+    void AdjustHandsToGrip()
+    {
+        // This is a simple adjust method; for a smoother transition, you might want to use Lerp or IK
+        if(leftHandTarget)
+            leftHandTransform.position = leftHandTarget.position;
+
+        if(rightHandTarget)
+            rightHandTransform.position = rightHandTarget.position;
     }
 }
