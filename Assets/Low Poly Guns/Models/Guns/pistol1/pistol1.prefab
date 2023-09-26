@@ -196,3 +196,9 @@ MonoBehaviour:
   multiplier: 10
   recoilAmount: 10
   recoilRecoveryRate: 80
+  aimFOV: 40
+  regularFOV: 60
+  aimSmooth: 10
+  aimPosition: {x: -0.25, y: 0, z: 0}
+  hipPosition: {x: 0, y: 0, z: 0}
+  playerCamera: {fileID: 0}

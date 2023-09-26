@@ -20,19 +20,26 @@ public class WeaponManager : MonoBehaviour
     public Transform leftHandTransform;  // Assign the left hand of the arm model here
     public Transform rightHandTransform; // Assign the right hand of the arm model here
 
+
     public bool m_slot1;
     public bool m_slot2;
     public bool m_slot3;
-    public float currentSlot = 0;
+    public float currentSlot = 1;
 
     private Transform leftHandTarget, rightHandTarget; // These will hold our grip point transforms
 
+
+
+
     void Update()
     {
+        
         Scroll();
         Slot();
         AdjustHandsToGrip();
+
     }
+    
 
     void Scroll()
     {
@@ -88,6 +95,11 @@ public class WeaponManager : MonoBehaviour
                 // Update hand grip points from the active weapon
                 leftHandTarget = activeWeapon.transform.Find("LeftHandGrip");
                 rightHandTarget = activeWeapon.transform.Find("RightHandGrip");
+                Debug.Log("Holder Position: " + Holder.transform.position);
+                Debug.Log("Current Slot: " + currentSlot);
+                Debug.Log("Weapon Position: " + activeWeapon.transform.position);
+
+
             }
             else
             {
@@ -123,4 +135,5 @@ public class WeaponManager : MonoBehaviour
         if(rightHandTarget)
             rightHandTransform.position = rightHandTarget.position;
     }
+
 }

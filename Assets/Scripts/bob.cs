@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
 
-public class bob : MonoBehaviour {
-
+public class bob : MonoBehaviour
+{
     [Header("Sway Settings")]
     [SerializeField] public float smooth;
     [SerializeField] public float multiplier;
@@ -11,21 +11,38 @@ public class bob : MonoBehaviour {
     [SerializeField] private float recoilAmount = 10.0f; // Amount of recoil (adjust as needed)
     [SerializeField] private float recoilRecoveryRate = 80.0f; // Speed of recoil recovery (adjust as needed)
 
+    [Header("Aiming Settings")]
+    [SerializeField] private float aimFOV = 40.0f;  // Field of view while aiming
+    [SerializeField] private float regularFOV = 60.0f;  // Regular field of view
+    [SerializeField] private float aimSmooth = 10.0f;  // Smoothing factor for aiming transition
+    [SerializeField] private Vector3 aimPosition;  // Local position of the camera/weapon when aiming
+    [SerializeField] private Vector3 hipPosition;  // Local position of the camera/weapon at hip
+
     private Vector3 currentRecoil = Vector3.zero;
+    [SerializeField] private Camera playerCamera; // Reference to the player's camera
+
+
+    private void Start()
+    {
+        // Automatically find the main camera in the scene
+        playerCamera = Camera.main;
+
+        if (playerCamera == null)
+        {
+            Debug.LogError("Main camera not found! Ensure there's a camera with the 'MainCamera' tag in the scene.");
+            return;
+        }
+
+        hipPosition = transform.localPosition;
+    }
 
     private void Update()
     {
-        // Check for left click
-        if (Input.GetMouseButton(0) && Input.GetMouseButton(1))
+
+        Aim();
+
+        if(Input.GetMouseButton(0))
         {
-            recoilAmount = 2f;
-            recoilRecoveryRate = 70f;
-            recoil();
-        }
-        else if(Input.GetMouseButton(0) && !Input.GetMouseButton(1))
-        {
-            recoilAmount = 10f;
-            recoilRecoveryRate = 80f;
             recoil();
         }
 
@@ -53,9 +70,30 @@ public class bob : MonoBehaviour {
     public void recoil()
     {
         currentRecoil += new Vector3(
-            UnityEngine.Random.Range(-recoilAmount, recoilAmount), 
-            UnityEngine.Random.Range(-recoilAmount, recoilAmount), 
+            UnityEngine.Random.Range(-recoilAmount, recoilAmount),
+            UnityEngine.Random.Range(-recoilAmount, recoilAmount),
             0
         );
     }
+
+    public void Aim()
+    {
+        if (Input.GetMouseButton(1))
+        {
+            // Interpolate the position and field of view to aim
+            transform.localPosition = Vector3.Lerp(transform.localPosition, aimPosition, aimSmooth * Time.deltaTime);
+            playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, aimFOV, aimSmooth * Time.deltaTime);
+            recoilAmount = 2f;
+        }
+        else
+        {
+            // Interpolate back to hip position and regular field of view
+            transform.localPosition = Vector3.Lerp(transform.localPosition, hipPosition, aimSmooth * Time.deltaTime);
+            playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, regularFOV, aimSmooth * Time.deltaTime);
+            recoilAmount = 10f;
+        }
+    }
+
+
+
 }

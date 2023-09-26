@@ -3,7 +3,12 @@ guid: 365eb88f3424c0d449edf97420116250
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - Holder: {instanceID: 0}
+  - leftHandTransform: {instanceID: 0}
+  - rightHandTransform: {instanceID: 0}
+  - crosshairPrefab: {fileID: 1888894800474217394, guid: 7d874f6b65ce6d34eb0544cf6cdbdf22,
+      type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
