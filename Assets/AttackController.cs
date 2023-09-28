@@ -1,5 +1,7 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 namespace Enemy.Attack
 {
@@ -32,20 +34,39 @@ namespace Enemy.Attack
         [SerializeField] private float bulletSpeed = 50f;
         private Camera cam;
 
+        public TextMeshProUGUI clipUI;
+        private int totalBulletStock = 120;  // Total bullets you start with
+        private int bulletsToAdd;  // Bullets to be added when reloading
+        public GameObject reloadActive;
+        public TextMeshProUGUI reloadUI;
+
+
         void Start()
         {
+            StartCoroutine(Reload());
             cam = Camera.main;
             // GunfireController initialization
             if (source != null) source.clip = GunShotClip;
             timeLastFired = 0;
             lastScopeState = scopeActive;
+            if (muzzlePosition == null) 
+            {
+                GameObject[] muzzleObjects = GameObject.FindGameObjectsWithTag("Muzzle");
+                muzzlePosition = muzzleObjects[0];
+            }
 
             // AttackController initialization
             currentMagazineSize = maxMagazineSize;
+            UpdateClipUI();
         }
 
         void Update()
         {
+            if (muzzlePosition == null) 
+            {
+                GameObject[] muzzleObjects = GameObject.FindGameObjectsWithTag("Muzzle");
+                muzzlePosition = muzzleObjects[0];
+            }
             // GunfireController logic
             if (rotate)
             {
@@ -69,7 +90,7 @@ namespace Enemy.Attack
                 FireWeapon();
             }
 
-            if (currentMagazineSize == 0 && !isReloading)
+            if (Input.GetKeyDown("r") && !isReloading && totalBulletStock > 0)
             {
                 StartCoroutine(Reload());
             }
@@ -117,6 +138,8 @@ namespace Enemy.Attack
                 HandleAudio();
 
                 currentMagazineSize--;
+
+                UpdateClipUI();
             }
         }
 
@@ -151,8 +174,43 @@ namespace Enemy.Attack
         {
             isReloading = true;
             yield return new WaitForSeconds(reloadTime);
-            currentMagazineSize = maxMagazineSize;
+
+            // Calculate the number of bullets to add during reload
+            bulletsToAdd = Mathf.Min(maxMagazineSize - currentMagazineSize, totalBulletStock);
+
+            // Update magazine and total bullet stock
+            currentMagazineSize += bulletsToAdd;
+            totalBulletStock -= bulletsToAdd;
+           
+
+            // Update the clipUI
+            UpdateClipUI();
+
             isReloading = false;
+        }
+        private void UpdateClipUI()
+        {
+            if (clipUI != null)
+            {
+                clipUI.text = string.Format("{0:D2}/{1:D2}", currentMagazineSize, totalBulletStock);
+            }
+
+            if(currentMagazineSize < 5)
+            {
+                reloadActive.SetActive(true);
+                reloadUI.text = "   Reload";
+            }
+            else if(currentMagazineSize == 0 && totalBulletStock == 0)
+            {
+                reloadActive.SetActive(true);
+                reloadUI.text = "  NO AMMO";
+            }
+            else
+            {
+                reloadActive.SetActive(false);
+            }
+
+
         }
     }
 }

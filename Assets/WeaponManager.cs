@@ -95,11 +95,6 @@ public class WeaponManager : MonoBehaviour
                 // Update hand grip points from the active weapon
                 leftHandTarget = activeWeapon.transform.Find("LeftHandGrip");
                 rightHandTarget = activeWeapon.transform.Find("RightHandGrip");
-                Debug.Log("Holder Position: " + Holder.transform.position);
-                Debug.Log("Current Slot: " + currentSlot);
-                Debug.Log("Weapon Position: " + activeWeapon.transform.position);
-
-
             }
             else
             {

@@ -25,6 +25,8 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 moveDampVelocity;
     private Vector3 currentForceVelocity;
 
+    public GameObject VFX;
+
     private void Start()
     {
         controller = GetComponent<CharacterController>();
@@ -50,10 +52,12 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftShift) && playerInput.magnitude > 0.1f)
         {
             playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, runFOV, fovSmooth * Time.deltaTime);
+            VFX.SetActive(true);
         }
         else
         {
             playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, regularFOV, fovSmooth * Time.deltaTime);
+            VFX.SetActive(false);
         }
 
         if (controller.isGrounded)
