@@ -8,6 +8,10 @@ TagManager:
   - LeftHandGrip
   - RightHandGrip
   - Muzzle
+  - Ammo
+  - Grappleable
+  - bullet
+  - Mob
   layers:
   - Default
   - TransparentFX
@@ -20,12 +24,12 @@ TagManager:
   - Character
   - Ground
   - Weapon
+  - Spawn
   - 
+  - FlashLight
   - 
-  - 
-  - 
-  - 
-  - 
+  - Environment
+  - NavMeshSet
   - 
   - 
   - 

@@ -35,14 +35,22 @@ namespace Enemy.Attack
         private Camera cam;
 
         public TextMeshProUGUI clipUI;
-        private int totalBulletStock = 120;  // Total bullets you start with
+        public int totalBulletStock = 120;  // Total bullets you start with
         private int bulletsToAdd;  // Bullets to be added when reloading
         public GameObject reloadActive;
         public TextMeshProUGUI reloadUI;
 
+        public GameObject refillAmmo;
+        public bool ammoActive = false;
+
 
         void Start()
         {
+            if(refillAmmo == null)
+            {
+                GameObject[] refillAmmoObject = GameObject.FindGameObjectsWithTag("Ammo");
+                refillAmmo = refillAmmoObject[0];
+            }
             StartCoroutine(Reload());
             cam = Camera.main;
             // GunfireController initialization
@@ -62,11 +70,29 @@ namespace Enemy.Attack
 
         void Update()
         {
+        
             if (muzzlePosition == null) 
             {
                 GameObject[] muzzleObjects = GameObject.FindGameObjectsWithTag("Muzzle");
                 muzzlePosition = muzzleObjects[0];
             }
+
+            if (refillAmmo == null)
+            {
+                GameObject[] refillAmmoObject = GameObject.FindGameObjectsWithTag("Ammo");
+
+                if (refillAmmoObject.Length > 0)
+                {
+                    refillAmmo = refillAmmoObject[0];
+                }
+                else
+                {
+                    // Handle the case where no objects with the "Ammo" tag were found.
+                    // You might want to log an error or take other appropriate action.
+                }
+            }
+            reFill();
+
             // GunfireController logic
             if (rotate)
             {
@@ -75,8 +101,12 @@ namespace Enemy.Attack
 
             if (autoFire && ((timeLastFired + shotDelay) <= Time.time))
             {
-                FireWeapon();
+                if (!isReloading)  // Add this line
+                {
+                    FireWeapon();
+                }
             }
+
 
             if (scope && lastScopeState != scopeActive)
             {
@@ -84,10 +114,12 @@ namespace Enemy.Attack
                 scope.SetActive(scopeActive);
             }
 
-            // AttackController logic
             if (Input.GetButton("Fire1") && Time.time - timeLastFired >= shootingRate)
             {
-                FireWeapon();
+                if (!isReloading)  
+                {
+                    FireWeapon();
+                }
             }
 
             if (Input.GetKeyDown("r") && !isReloading && totalBulletStock > 0)
@@ -96,6 +128,21 @@ namespace Enemy.Attack
             }
 
             
+        }
+
+        public void OnTriggerEnter(Collider other)
+        {
+            if (other.tag == "Ammo")
+            {
+                RefillAmmo(totalBulletStock); // Here you can specify how much ammo to refill
+                Destroy(other.gameObject); // Remove the Ammo object from the scene
+            }
+        }
+
+        public void RefillAmmo(int amount)
+        {
+            totalBulletStock += amount;
+            UpdateClipUI();
         }
 
         public void FireWeapon()
@@ -121,7 +168,7 @@ namespace Enemy.Attack
                     shootingDirection = ray.direction;  // fallback to shooting in the direction the camera is facing
                 }
 
-                GameObject bullet = Instantiate(projectilePrefab, muzzlePosition.transform.position, Quaternion.LookRotation(shootingDirection));
+                GameObject bullet = Instantiate(projectilePrefab, muzzlePosition.transform.position, Quaternion.LookRotation(shootingDirection / 2));
                 Rigidbody bulletRigidbody = bullet.GetComponent<Rigidbody>();
                 if (bulletRigidbody != null)
                 {
@@ -198,19 +245,33 @@ namespace Enemy.Attack
             if(currentMagazineSize < 5)
             {
                 reloadActive.SetActive(true);
-                reloadUI.text = "   Reload";
+                reloadUI.text = "        Reload";
             }
             else if(currentMagazineSize == 0 && totalBulletStock == 0)
             {
                 reloadActive.SetActive(true);
-                reloadUI.text = "  NO AMMO";
+                reloadUI.text = "      NO AMMO";
             }
             else
             {
                 reloadActive.SetActive(false);
             }
+        }
 
+        public void reFill()
+        {
+            if(refillAmmo != null)
+            {
+                ammoActive = true;
+            }
 
+            if(refillAmmo == null && ammoActive)
+                {
+                    totalBulletStock = 120;
+                    ammoActive = false;
+                    UpdateClipUI();
+                }
+            
         }
     }
 }
