@@ -12,6 +12,7 @@ TagManager:
   - Grappleable
   - bullet
   - Mob
+  - reload
   layers:
   - Default
   - TransparentFX

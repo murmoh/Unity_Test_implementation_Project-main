@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine;
+using Mirror;
 
 
 
-public class PlayerHealthSystem : MonoBehaviour
+public class PlayerHealthSystem : NetworkBehaviour
 {
     [Header("Health Settings")]
     [SerializeField] private Image healthbar;
@@ -37,6 +38,10 @@ public class PlayerHealthSystem : MonoBehaviour
 
     void Update()
     {
+        if (!isLocalPlayer)
+        {
+            return;
+        }
         if(currentHealth < 100)
         {
             Regenerate = true;
@@ -143,8 +148,16 @@ public class PlayerHealthSystem : MonoBehaviour
 
     private void UpdateHealthBar()
     {
-        healthbar.fillAmount = currentHealth / fullHealth;  // Corrected health bar fill calculation
+        if (healthbar != null)
+        {
+            healthbar.fillAmount = currentHealth / fullHealth;
+        }
+        else
+        {
+            Debug.LogWarning("Healthbar Image is not set");
+        }
     }
+
 
     void SetDecreaseHealthAmount()
     {

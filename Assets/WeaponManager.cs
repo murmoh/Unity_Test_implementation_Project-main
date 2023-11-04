@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
-public class WeaponManager : MonoBehaviour
+public class WeaponManager : NetworkBehaviour
 {
     [Header("In-Game Sectors")]
     public GameObject[] slots;
@@ -29,11 +30,12 @@ public class WeaponManager : MonoBehaviour
     private Transform leftHandTarget, rightHandTarget; // These will hold our grip point transforms
 
 
-
-
     void Update()
     {
-        
+        if (!isLocalPlayer)
+        {
+            return;
+        }
         Scroll();
         Slot();
         AdjustHandsToGrip();
@@ -61,6 +63,10 @@ public class WeaponManager : MonoBehaviour
 
     void Start()
     {
+        if (!isLocalPlayer)
+        {
+            return;
+        }
         for (int i = 0; i < weaponList.Length && i < slots.Length; i++)
         {
             ManageWeapon(i, i);

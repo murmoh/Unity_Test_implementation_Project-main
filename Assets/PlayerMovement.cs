@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
-public class PlayerMovement : MonoBehaviour
+
+public class PlayerMovement : NetworkBehaviour
 {
     private Camera playerCamera;    // Player's camera
     public float moveSmoothTime = 0.1f;
@@ -71,6 +73,10 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        if (!isLocalPlayer)
+        {
+            return;
+        }
         if (isDashing) return; // Don't do anything else if dashing
 
         Vector3 playerInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));

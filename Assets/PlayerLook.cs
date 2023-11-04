@@ -1,10 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
-public class PlayerLook : MonoBehaviour
+
+public class PlayerLook : NetworkBehaviour
 {
     public Transform PlayerCamera;
+    public Camera pCamera;
     public Transform weapon;
     public Vector2 Sensitivities;
     public float tiltAmount = 10f;
@@ -22,12 +25,19 @@ public class PlayerLook : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
         playerMovement = GetComponentInParent<PlayerMovement>();  // Get the PlayerMovement script from the parent object
-        playerMovement = GameObject.Find("Player").GetComponent<PlayerMovement>();
-
+        playerMovement = gameObject.GetComponent<PlayerMovement>();
+        if (!isLocalPlayer)
+        {
+            pCamera.gameObject.SetActive(false);
+        }
     }
 
     void Update()
     {
+        if (!isLocalPlayer)
+        {
+            return;
+        }
         // Mouse Look
         Vector2 MouseInput = new Vector2
         {

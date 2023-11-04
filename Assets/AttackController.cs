@@ -46,24 +46,12 @@ namespace Enemy.Attack
 
         void Start()
         {
-            if(refillAmmo == null)
-            {
-                GameObject[] refillAmmoObject = GameObject.FindGameObjectsWithTag("Ammo");
-                refillAmmo = refillAmmoObject[0];
-            }
+            AutoAssignGameObjects();  // Automatically assign GameObjects if they're not set
             StartCoroutine(Reload());
             cam = Camera.main;
-            // GunfireController initialization
-            if (source != null) source.clip = GunShotClip;
             timeLastFired = 0;
             lastScopeState = scopeActive;
-            if (muzzlePosition == null) 
-            {
-                GameObject[] muzzleObjects = GameObject.FindGameObjectsWithTag("Muzzle");
-                muzzlePosition = muzzleObjects[0];
-            }
 
-            // AttackController initialization
             currentMagazineSize = maxMagazineSize;
             UpdateClipUI();
         }
@@ -71,26 +59,7 @@ namespace Enemy.Attack
         void Update()
         {
         
-            if (muzzlePosition == null) 
-            {
-                GameObject[] muzzleObjects = GameObject.FindGameObjectsWithTag("Muzzle");
-                muzzlePosition = muzzleObjects[0];
-            }
-
-            if (refillAmmo == null)
-            {
-                GameObject[] refillAmmoObject = GameObject.FindGameObjectsWithTag("Ammo");
-
-                if (refillAmmoObject.Length > 0)
-                {
-                    refillAmmo = refillAmmoObject[0];
-                }
-                else
-                {
-                    // Handle the case where no objects with the "Ammo" tag were found.
-                    // You might want to log an error or take other appropriate action.
-                }
-            }
+            AutoAssignGameObjects();  // Automatically assign GameObjects if they're not set during Update as well
             reFill();
 
             // GunfireController logic
@@ -106,7 +75,6 @@ namespace Enemy.Attack
                     FireWeapon();
                 }
             }
-
 
             if (scope && lastScopeState != scopeActive)
             {
@@ -128,6 +96,32 @@ namespace Enemy.Attack
             }
 
             
+        }
+
+        private void AutoAssignGameObjects()
+        {
+            if (reloadActive == null)
+            {
+                reloadActive = GameObject.Find("reload");
+            }
+
+            if (muzzlePosition == null) 
+            {
+                GameObject[] muzzleObjects = GameObject.FindGameObjectsWithTag("Muzzle");
+                if (muzzleObjects.Length > 0)
+                {
+                    muzzlePosition = muzzleObjects[0];
+                }
+            }
+
+            if (refillAmmo == null)
+            {
+                GameObject[] refillAmmoObject = GameObject.FindGameObjectsWithTag("Ammo");
+                if (refillAmmoObject.Length > 0)
+                {
+                    refillAmmo = refillAmmoObject[0];
+                }
+            }
         }
 
         public void OnTriggerEnter(Collider other)
@@ -240,21 +234,6 @@ namespace Enemy.Attack
             if (clipUI != null)
             {
                 clipUI.text = string.Format("{0:D2}/{1:D2}", currentMagazineSize, totalBulletStock);
-            }
-
-            if(currentMagazineSize < 5)
-            {
-                reloadActive.SetActive(true);
-                reloadUI.text = "        Reload";
-            }
-            else if(currentMagazineSize == 0 && totalBulletStock == 0)
-            {
-                reloadActive.SetActive(true);
-                reloadUI.text = "      NO AMMO";
-            }
-            else
-            {
-                reloadActive.SetActive(false);
             }
         }
 
