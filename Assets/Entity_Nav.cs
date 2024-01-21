@@ -9,7 +9,7 @@ public class Entity_Nav : MonoBehaviour
     public GameObject Entity;
     private NavMeshAgent nav;
     public float speed = 5f;
-    float timer = 3;
+    float timer = 3f;
 
     void Awake()
     {
@@ -27,7 +27,11 @@ public class Entity_Nav : MonoBehaviour
 
         Target = GameObject.FindGameObjectsWithTag("Player");
         if(timer <= 0)
-        {if(Target != null)
-        {nav.destination = Target[0].transform.position;}}
+        {
+            if(Target != null)
+            {
+                nav.destination = Target[0].transform.position;
+            }
+        }
     }
 }

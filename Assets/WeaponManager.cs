@@ -1,10 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Mirror;
+using Photon.Pun;
 
-public class WeaponManager : NetworkBehaviour
+public class WeaponManager : MonoBehaviour
 {
+    private PhotonView view;
     [Header("In-Game Sectors")]
     public GameObject[] slots;
     public GameObject[] equipments;
@@ -32,14 +33,12 @@ public class WeaponManager : NetworkBehaviour
 
     void Update()
     {
-        if (!isLocalPlayer)
+        if (view.IsMine)
         {
-            return;
+            Scroll();
+            Slot();
+            AdjustHandsToGrip();
         }
-        Scroll();
-        Slot();
-        AdjustHandsToGrip();
-
     }
     
 
@@ -63,17 +62,17 @@ public class WeaponManager : NetworkBehaviour
 
     void Start()
     {
-        if (!isLocalPlayer)
+        view = GetComponentInParent<PhotonView>();
+        if (view.IsMine)
         {
-            return;
-        }
-        for (int i = 0; i < weaponList.Length && i < slots.Length; i++)
-        {
-            ManageWeapon(i, i);
-        }
+            for (int i = 0; i < weaponList.Length && i < slots.Length; i++)
+            {
+                ManageWeapon(i, i);
+            }
 
-        m_slot3 = true; // default slot is 3
-        UpdateSlotParenting();  // Ensure the default slot is set as a child of the Holder
+            m_slot3 = true; // default slot is 3
+            UpdateSlotParenting();  // Ensure the default slot is set as a child of the Holder
+        }
     }
 
     void Slot()

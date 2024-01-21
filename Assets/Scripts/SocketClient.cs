@@ -12,7 +12,7 @@ public class SocketClient : MonoBehaviour
     private NetworkStream _stream;
     public Image loadbar;
     private int numMessages = 0;  // New variable to count the number of messages
-    private int totalMessages = 4;  // Total number of messages, should match with server messages
+    public int totalMessages = 4;  // Total number of messages, should match with server messages
     public float timeBetweenMessages = 0.5f; // Time in seconds
 
 
@@ -86,13 +86,29 @@ public class SocketClient : MonoBehaviour
                 StartCoroutine(SmoothFillLoadingBar((float)numMessages / totalMessages, timeBetweenMessages));
 
             }
+
+            // Check if all messages have been received
+            if (numMessages == totalMessages)
+            {
+                SendCompletionMessage();
+            }
+
         }
     }
+
+    private void SendCompletionMessage()
+    {
+        string completionMessage = "Loading Complete";
+        byte[] messageBytes = Encoding.UTF8.GetBytes(completionMessage);
+        _stream.Write(messageBytes, 0, messageBytes.Length);
+        Debug.Log("Sent completion message to server: " + completionMessage);
+    }
+
 
     private void OnDestroy()
     {
         if (_stream != null)
-        {
+        {   
             _stream.Close();
             _stream = null;
         }

@@ -109,7 +109,7 @@ public class TerrainGenerator : MonoBehaviour
                 float globalX = x + segmentIndexX * sizeX;
                 float globalY = y + segmentIndexY * sizeY;
                 float noiseValue = Mathf.PerlinNoise(globalX / scale, globalY / scale);
-
+    
                 float height = noiseValue * amplitude;
 
                 // Add island-like falloff

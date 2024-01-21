@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using Photon.Pun;
 
 public class Points : MonoBehaviour
 {
+    PhotonView view;
     public int points;
     public TextMeshProUGUI UI_Points;
 
+    public void Start()
+    {
+        view = GetComponent<PhotonView>();
+    }
 
     public void OnKillEnemy()
     {

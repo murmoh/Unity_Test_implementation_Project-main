@@ -2,11 +2,13 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Photon.Pun;
 
 namespace Enemy.Attack
 {
     public class AttackController : MonoBehaviour
     {
+        PhotonView view;
         // GunfireController Variables
         public AudioClip GunShotClip;
         public AudioSource source;
@@ -46,55 +48,60 @@ namespace Enemy.Attack
 
         void Start()
         {
-            AutoAssignGameObjects();  // Automatically assign GameObjects if they're not set
-            StartCoroutine(Reload());
-            cam = Camera.main;
-            timeLastFired = 0;
-            lastScopeState = scopeActive;
+            view = GetComponent<PhotonView>();
+            if(view.IsMine)
+            {
+                AutoAssignGameObjects();  // Automatically assign GameObjects if they're not set
+                StartCoroutine(Reload());
+                cam = Camera.main;
+                timeLastFired = 0;
+                lastScopeState = scopeActive;
 
-            currentMagazineSize = maxMagazineSize;
-            UpdateClipUI();
+                currentMagazineSize = maxMagazineSize;
+                UpdateClipUI();
+            }
         }
 
         void Update()
         {
-        
-            AutoAssignGameObjects();  // Automatically assign GameObjects if they're not set during Update as well
-            reFill();
-
-            // GunfireController logic
-            if (rotate)
+            if(view.IsMine)
             {
-                transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y + rotationSpeed, transform.localEulerAngles.z);
-            }
+                AutoAssignGameObjects();  // Automatically assign GameObjects if they're not set during Update as well
+                reFill();
 
-            if (autoFire && ((timeLastFired + shotDelay) <= Time.time))
-            {
-                if (!isReloading)  // Add this line
+                // GunfireController logic
+                if (rotate)
                 {
-                    FireWeapon();
+                    transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y + rotationSpeed, transform.localEulerAngles.z);
+                }
+
+                if (autoFire && ((timeLastFired + shotDelay) <= Time.time))
+                {
+                    if (!isReloading)  // Add this line
+                    {
+                        FireWeapon();
+                    }
+                }
+
+                if (scope && lastScopeState != scopeActive)
+                {
+                    lastScopeState = scopeActive;
+                    scope.SetActive(scopeActive);
+                }
+
+                if (Input.GetButton("Fire1") && Time.time - timeLastFired >= shootingRate)
+                {
+                    if (!isReloading)  
+                    {
+                        FireWeapon();
+                    }
+                }
+
+                if (Input.GetKeyDown("r") && !isReloading && totalBulletStock > 0)
+                {
+                    StartCoroutine(Reload());
                 }
             }
-
-            if (scope && lastScopeState != scopeActive)
-            {
-                lastScopeState = scopeActive;
-                scope.SetActive(scopeActive);
-            }
-
-            if (Input.GetButton("Fire1") && Time.time - timeLastFired >= shootingRate)
-            {
-                if (!isReloading)  
-                {
-                    FireWeapon();
-                }
-            }
-
-            if (Input.GetKeyDown("r") && !isReloading && totalBulletStock > 0)
-            {
-                StartCoroutine(Reload());
-            }
-
             
         }
 
@@ -145,8 +152,8 @@ namespace Enemy.Attack
             {
                 timeLastFired = Time.time;
 
-                // GunfireController logic
-                var flash = Instantiate(muzzlePrefab, muzzlePosition.transform);
+                // Call an RPC to instantiate the muzzle flash on all clients
+                view.RPC("SpawnMuzzleFlash", RpcTarget.All, muzzlePosition.transform.position);
 
                 // Shooting logic
                 Ray ray = cam.ScreenPointToRay(new Vector2(Screen.width / 2, Screen.height / 2));
@@ -162,12 +169,8 @@ namespace Enemy.Attack
                     shootingDirection = ray.direction;  // fallback to shooting in the direction the camera is facing
                 }
 
-                GameObject bullet = Instantiate(projectilePrefab, muzzlePosition.transform.position, Quaternion.LookRotation(shootingDirection / 2));
-                Rigidbody bulletRigidbody = bullet.GetComponent<Rigidbody>();
-                if (bulletRigidbody != null)
-                {
-                    bulletRigidbody.velocity = shootingDirection * bulletSpeed;
-                }
+                // Call an RPC to instantiate the bullet on all clients
+                view.RPC("SpawnBullet", RpcTarget.All, muzzlePosition.transform.position, Quaternion.LookRotation(shootingDirection / 2));
 
                 if (projectileToDisableOnFire != null)
                 {
@@ -182,6 +185,20 @@ namespace Enemy.Attack
 
                 UpdateClipUI();
             }
+        }
+
+        [PunRPC]
+        private void SpawnMuzzleFlash(Vector3 position)
+        {
+            // Instantiate the muzzle flash on all clients
+            Instantiate(muzzlePrefab, position, Quaternion.identity);
+        }
+
+        [PunRPC]
+        private void SpawnBullet(Vector3 position, Quaternion rotation)
+        {
+            // Instantiate the bullet on all clients
+            GameObject bullet = Instantiate(projectilePrefab, position, rotation);
         }
 
         private void HandleAudio()

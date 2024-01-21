@@ -1,11 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Mirror;
+using Photon.Pun;
 
 
-public class PlayerMovement : NetworkBehaviour
+public class PlayerMovement : MonoBehaviour
 {
+    PhotonView view;
     private Camera playerCamera;    // Player's camera
     public float moveSmoothTime = 0.1f;
     public float gravityStrength = 9.8f;
@@ -61,10 +62,12 @@ public class PlayerMovement : NetworkBehaviour
     public string jumpSound = "Jump";
     public string dashSound = "Dash";
     public string grappleSound = "Grapple";
+    Camera cam;
 
 
     private void Start()
     {
+        view = GetComponent<PhotonView>();
         controller = GetComponent<CharacterController>();
         lastDashTime = Time.time - dashCooldown; // Initialize so that the player can dash immediately
         playerCamera = Camera.main; // Assuming the main camera represents the player's view
@@ -73,104 +76,103 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Update()
     {
-        if (!isLocalPlayer)
+        if(view.IsMine)
         {
-            return;
-        }
-        if (isDashing) return; // Don't do anything else if dashing
+            if (isDashing) return; // Don't do anything else if dashing
 
-        Vector3 playerInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));
+            Vector3 playerInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));
 
-        if (playerInput.magnitude > 1f)
-        {
-            playerInput.Normalize();
-        }
-
-        if (Input.GetKeyDown(KeyCode.E) && Time.time >= lastDashTime + dashCooldown)
-        {
-            StartCoroutine(Dash());
-            PlaySound(dashSound);
-        }
-
-        Vector3 moveVector = transform.TransformDirection(playerInput);
-        float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
-
-        currentMoveVelocity = Vector3.SmoothDamp(currentMoveVelocity, moveVector * currentSpeed, ref moveDampVelocity, moveSmoothTime);
-
-        if (moveVector != Vector3.zero)
-            controller.Move(currentMoveVelocity * Time.deltaTime);
-
-        float forwardMovement = Vector3.Dot(controller.velocity, transform.forward);
-        
-        if (Mathf.Abs(forwardMovement) > 0.1f && !Input.GetKey(KeyCode.LeftShift))
-        {
-            // If walking forwards or backwards
-            playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, walkingFOV, fovSmooth * Time.deltaTime);
-            AudioManager.Instance.Stop(runSound);
-            PlaySound(walkSound);
-        }
-        else if (Input.GetKey(KeyCode.LeftShift) && playerInput.magnitude > 0.1f)
-        {
-            // If running
-            playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, runFOV, fovSmooth * Time.deltaTime);
-            AudioManager.Instance.Stop(walkSound);
-            PlaySound(runSound);
-        }
-        else
-        {
-            // If not moving or walking sideways
-            playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, regularFOV, fovSmooth * Time.deltaTime);
-            AudioManager.Instance.Stop(walkSound);
-            AudioManager.Instance.Stop(runSound);
-        }
-
-        if (Input.GetKey(KeyCode.LeftShift) && currentMoveVelocity.magnitude > 0.1f)
-        {
-            // Calculate the target tilt angle
-            float sinWave = Mathf.Sin(Time.time * runningTiltSpeed);
-            targetCameraTilt = sinWave * runningTiltAmount;
-        }
-        else
-        {
-            targetCameraTilt = 0f;
-        }
-
-        // Smoothly interpolate towards the target tilt
-        currentCameraTilt = Mathf.Lerp(currentCameraTilt, targetCameraTilt, Time.deltaTime * runningTiltSpeed);
-
-        // Apply the tilt to the camera
-        Vector3 currentCameraRotation = playerCamera.transform.localEulerAngles;
-        currentCameraRotation.x = initialCameraRotationX + currentCameraTilt;
-        playerCamera.transform.localEulerAngles = currentCameraRotation;
-
-        float appliedGravity = isGrappling ? reducedGravityStrength : gravityStrength;
-        if (controller.isGrounded)
-        {
-            if (Input.GetKey(KeyCode.Space))
+            if (playerInput.magnitude > 1f)
             {
-                currentForceVelocity.y = jumpStrength;
-                PlaySound(jumpSound);
+                playerInput.Normalize();
+            }
+
+            if (Input.GetKeyDown(KeyCode.E) && Time.time >= lastDashTime + dashCooldown)
+            {
+                StartCoroutine(Dash());
+                PlaySound(dashSound);
+            }
+
+            Vector3 moveVector = transform.TransformDirection(playerInput);
+            float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
+
+            currentMoveVelocity = Vector3.SmoothDamp(currentMoveVelocity, moveVector * currentSpeed, ref moveDampVelocity, moveSmoothTime);
+
+            if (moveVector != Vector3.zero)
+                controller.Move(currentMoveVelocity * Time.deltaTime);
+
+            float forwardMovement = Vector3.Dot(controller.velocity, transform.forward);
+            
+            if (Mathf.Abs(forwardMovement) > 0.1f && !Input.GetKey(KeyCode.LeftShift))
+            {
+                // If walking forwards or backwards
+                playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, walkingFOV, fovSmooth * Time.deltaTime);
+                AudioManager.Instance.Stop(runSound);
+                PlaySound(walkSound);
+            }
+            else if (Input.GetKey(KeyCode.LeftShift) && playerInput.magnitude > 0.1f)
+            {
+                // If running
+                playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, runFOV, fovSmooth * Time.deltaTime);
+                AudioManager.Instance.Stop(walkSound);
+                PlaySound(runSound);
+            }
+            else
+            {
+                // If not moving or walking sideways
+                playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, regularFOV, fovSmooth * Time.deltaTime);
                 AudioManager.Instance.Stop(walkSound);
                 AudioManager.Instance.Stop(runSound);
             }
-        }
-        else
-        {
-            currentForceVelocity.y -= appliedGravity * Time.deltaTime;
-            AudioManager.Instance.Stop(jumpSound);
-        }
 
-        controller.Move(currentForceVelocity * Time.deltaTime);
+            if (Input.GetKey(KeyCode.LeftShift) && currentMoveVelocity.magnitude > 0.1f)
+            {
+                // Calculate the target tilt angle
+                float sinWave = Mathf.Sin(Time.time * runningTiltSpeed);
+                targetCameraTilt = sinWave * runningTiltAmount;
+            }
+            else
+            {
+                targetCameraTilt = 0f;
+            }
 
-        if (Input.GetKeyDown(KeyCode.V) && Time.time >= lastGrappleTime + grappleCooldown)
-        {
-            TryGrapple();
-            PlaySound(grappleSound);
-        }
+            // Smoothly interpolate towards the target tilt
+            currentCameraTilt = Mathf.Lerp(currentCameraTilt, targetCameraTilt, Time.deltaTime * runningTiltSpeed);
 
-        if (isGrappling)
-        {
-            StartCoroutine(GrappleRush());
+            // Apply the tilt to the camera
+            Vector3 currentCameraRotation = playerCamera.transform.localEulerAngles;
+            currentCameraRotation.x = initialCameraRotationX + currentCameraTilt;
+            playerCamera.transform.localEulerAngles = currentCameraRotation;
+
+            float appliedGravity = isGrappling ? reducedGravityStrength : gravityStrength;
+            if (controller.isGrounded)
+            {
+                if (Input.GetKey(KeyCode.Space))
+                {
+                    currentForceVelocity.y = jumpStrength;
+                    PlaySound(jumpSound);
+                    AudioManager.Instance.Stop(walkSound);
+                    AudioManager.Instance.Stop(runSound);
+                }
+            }
+            else
+            {
+                currentForceVelocity.y -= appliedGravity * Time.deltaTime;
+                AudioManager.Instance.Stop(jumpSound);
+            }
+
+            controller.Move(currentForceVelocity * Time.deltaTime);
+
+            if (Input.GetKeyDown(KeyCode.V) && Time.time >= lastGrappleTime + grappleCooldown)
+            {
+                TryGrapple();
+                PlaySound(grappleSound);
+            }
+
+            if (isGrappling)
+            {
+                StartCoroutine(GrappleRush());
+            }
         }
     }
 

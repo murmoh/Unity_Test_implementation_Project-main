@@ -13,6 +13,9 @@ TagManager:
   - bullet
   - Mob
   - reload
+  - Bullet
+  - clip
+  - Spawn
   layers:
   - Default
   - TransparentFX

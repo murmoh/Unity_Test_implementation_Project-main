@@ -20,7 +20,7 @@ public class Bullet : MonoBehaviour
     void OnCollisionEnter(Collision hitInfo)
     {
         
-        if (hitInfo.gameObject.tag == "Mob")
+        if (hitInfo.gameObject.tag == "player")
         {
             // Create blood effect at the point of collision before destroying the bullet
             Vector3 position = hitInfo.contacts[0].point;

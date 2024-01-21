@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
 public class FlashLight : MonoBehaviour
 {
+    PhotonView view;
     public GameObject _flashLight;
     public Light pointLight;
     public float maxLightIntensity = 2f;
@@ -13,6 +15,7 @@ public class FlashLight : MonoBehaviour
 
     private void Start()
     {
+        view = GetComponent<PhotonView>();
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
         {
@@ -23,7 +26,10 @@ public class FlashLight : MonoBehaviour
 
     public void Update()
     {
-        LightController();
+        if(view.IsMine)
+        {
+            LightController();
+        }
     }
 
     public void LightController()

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine;
-using Mirror;
+using Photon.Pun;
 
 
-
-public class PlayerHealthSystem : NetworkBehaviour
+public class PlayerHealthSystem : MonoBehaviour
 {
+    PhotonView view;
     [Header("Health Settings")]
     [SerializeField] private Image healthbar;
     [SerializeField] private float fullHealth = 100.0f;
@@ -26,6 +26,7 @@ public class PlayerHealthSystem : NetworkBehaviour
 
     void Start()
     {
+        view = GetComponent<PhotonView>();
         currentHealth = fullHealth;
         regenDelayTimer = regenDelay;  // Initialize the regen delay timer
         UpdateHealthBar();
@@ -38,41 +39,40 @@ public class PlayerHealthSystem : NetworkBehaviour
 
     void Update()
     {
-        if (!isLocalPlayer)
+        if(view.IsMine)
         {
-            return;
-        }
-        if(currentHealth < 100)
-        {
-            Regenerate = true;
-        }
-        else
-        {
-            Regenerate = false;
-        }
-
-        if (hitRangeActive)
-        {
-            regenDelayTimer = regenDelay;  // Reset the delay timer when attacked
-            DecreaseHealth(decreaseHealthAmount);  // Apply deltaTime to make it frame rate independent
-        }
-        else
-        {
-            regenDelayTimer -= Time.deltaTime;  // Count down the delay timer
-
-            if (Regenerate && regenDelayTimer <= 0 && _time <= 0)
+            if(currentHealth < 100)
             {
-                reGen();
-                
+                Regenerate = true;
             }
-            _time -= Time.deltaTime;  // Reduce the regeneration timer when not in hit range
+            else
+            {
+                Regenerate = false;
+            }
+
+            if (hitRangeActive)
+            {
+                regenDelayTimer = regenDelay;  // Reset the delay timer when attacked
+                DecreaseHealth(decreaseHealthAmount);  // Apply deltaTime to make it frame rate independent
+            }
+            else
+            {
+                regenDelayTimer -= Time.deltaTime;  // Count down the delay timer
+
+                if (Regenerate && regenDelayTimer <= 0 && _time <= 0)
+                {
+                    reGen();
+                    
+                }
+                _time -= Time.deltaTime;  // Reduce the regeneration timer when not in hit range
+            }
         }
     }
 
 
     void OnTriggerEnter(Collider collider)
     {
-        if (collider.transform.gameObject.tag == "Mob")
+        if (collider.transform.gameObject.tag == "bullet")
         {
             collidingMobsCount++;
             UpdateHitRangeActiveStatus();
@@ -85,7 +85,7 @@ public class PlayerHealthSystem : NetworkBehaviour
 
     void OnTriggerExit(Collider collider)
     {
-        if (collider.transform.gameObject.tag == "Mob")
+        if (collider.transform.gameObject.tag == "bullet")
         {
             collidingMobsCount--;
             UpdateHitRangeActiveStatus();
